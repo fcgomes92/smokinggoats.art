@@ -1,16 +1,19 @@
 version: '3'
 services:
-  smkgts:
-    container_name: smkgts_web
-    build: ./
+  smkgts_directus:
+    container_name: smkgts_directus
+    image: directus/directus
     restart: unless-stopped
-    ports:
-      - 3000:3000
     networks:
-      - smkgts_net
+      - tproxy
+    # ports:
+    #   - 8055:8055
+    env_file:
+      - ./.env
     volumes:
-      - ./container/nginx/smkgts.conf:/etc/nginx/conf.d/default.conf
-      - ./:/app
+      - ./data/database:/directus/database
+      - ./data/uploads:/directus/uploads
+      - ./data/extensions:/directus/extensions
     environment:
       KEY: $DIRECTUS_KEY
       SECRET: $DIRECTUS_SECRET
@@ -18,9 +21,36 @@ services:
       ADMIN_PASSWORD: $DIRECTUS_PASS
       CORS_ENABLED: 'true'
       CORS_ORIGIN: $DIRECTUS_CORS_ORIGIN
+    labels:
+      traefik.enable: true
+      traefik.http.routers.smkgts_directus.rule: Host(`$SMKGTS_DIRECTUS_HOSTNAME`) || Host(`$SMKGTS_DIRECTUS_VPC_HOSTNAME`)
+      traefik.http.routers.smkgts_directus.entrypoints: websecure
+      traefik.http.routers.smkgts_directus.service: smkgts_directus
+      traefik.http.services.smkgts_directus.loadbalancer.server.port: $SMKGTS_DIRECTUS_PORT
+  smkgts:
+    container_name: smkgts_client
+    build: ./
+    restart: unless-stopped
+    env_file:
+      - ./.env
+    networks:
+      - tproxy
+    # volumes:
+    # - ./dist:/app
+    environment:
+      KEY: $DIRECTUS_KEY
+      SECRET: $DIRECTUS_SECRET
+      ADMIN_EMAIL: $DIRECTUS_EMAIL
+      ADMIN_PASSWORD: $DIRECTUS_PASS
+      CORS_ENABLED: 'true'
+      CORS_ORIGIN: $DIRECTUS_CORS_ORIGIN
+    labels:
+      traefik.enable: true
+      traefik.http.routers.smkgts_client.rule: Host(`$SMKGTS_CLIENT_HOSTNAME`) || Host(`$SMKGTS_CLIENT_VPC_HOSTNAME`)
+      traefik.http.routers.smkgts_client.entrypoints: websecure
+      traefik.http.routers.smkgts_client.service: smkgts_client
+      traefik.http.services.smkgts_client.loadbalancer.server.port: $SMKGTS_CLIENT_PORT
 
 networks:
-  smkgts_net:
-    driver: bridge
-    driver_opts:
-      com.docker.network.driver.mtu: 1300
+  tproxy:
+    external: true
