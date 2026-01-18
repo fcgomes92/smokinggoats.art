@@ -16,3 +16,4 @@ container/directus/extensions
 container/directus/uploads
 container/nginx/certbot
 dist
+container/**/data

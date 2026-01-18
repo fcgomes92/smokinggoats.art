@@ -9,5 +9,4 @@ RUN npm run build
 
 FROM nginx
 COPY ./container/nginx/smkgts.conf /etc/nginx/conf.d/default.conf
-
 COPY --from=base /app/dist /app
