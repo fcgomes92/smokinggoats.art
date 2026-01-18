@@ -37,7 +37,7 @@ export const menuDict: Record<string, Route> = {
 		}
 	},
 	ccmovies: {
-		name: 'Firme',
+		name: 'Firme?',
 		path: ROUTES.ccmovies(),
 		soundtrack: {
 			src: [
